@@ -1,2 +1,2 @@
 # toPDF
-Conversion of doc/docx file(s) to pdf using python.
+Convert doc/docx file(s) to pdf in bulk.
