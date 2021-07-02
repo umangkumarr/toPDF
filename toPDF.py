@@ -1,30 +1,41 @@
-import sys
 import os
-import comtypes.client
 import multiprocessing
+import numpy as np
 
-def WORDtoPDF(in_file, out_file, wdFormatPDF=17):
-    if in_file.split('.')[-1]=='doc' or in_file.split('.')[-1]=='docx':
-        word = comtypes.client.CreateObject('Word.Application')
-        word.Visible = False
-        doc = word.Documents.Open(in_file)
-        doc.SaveAs(out_file, FileFormat=wdFormatPDF)
-        doc.Close()
-        word.Quit()
-        os.remove(in_file)
+path = ''
+
+def WORDtoPDF(in_file):
+    if in_file.split('.')[-1] in ['doc', 'docx']:
+        os.system(
+            f'unoconv --connection \'socket,host=127.0.0.1,port=2220,tcpNoDelay=1;urp;StarOffice.ComponentContext\' -f pdf {path}{in_file}')
+        os.system(f'rm {path}{in_file}')
+
+
+func_vect = np.vectorize(WORDtoPDF, otypes=[str])
+process = []
+
+
+def multi_process(file_name):
+    l = len(file_name)
+    div = l//4
+    if div != 0:
+        for i in range(4):
+            p = multiprocessing.Process(target=func_vect, args=[
+                                        file_name[i*div:(i+1)*div]])
+            p.start()
+            process.append(p)
+        if (l-4*div) != 0:
+            multi_process(file_name[4*div:l])
+    else:
+        p = multiprocessing.Process(target=func_vect, args=[file_name])
+        p.start()
+        process.append(p)
+
 
 def main():
-    file_names=list(list(os.walk("docs"))[0])
+    file_names = np.array(os.listdir(path))
+    multi_process(file_names)
 
-    processes=[]
 
-    for _ in range(len(file_names[2])):
-        p = multiprocessing.Process(target=WORDtoPDF, args=[os.path.abspath(file_names[0])+"/"+file_names[2][_],os.path.abspath(file_names[0])+"/"+"".join(file_names[2][_].split(".")[:-1])+".pdf"])
-        p.start()
-        processes.append(p)
-
-    for process in processes:
-        process.join()
-
-if __name__=="__main__":
+if __name__ == "__main__":
     main()
