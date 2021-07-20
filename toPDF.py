@@ -2,7 +2,7 @@ import os
 import multiprocessing
 import numpy as np
 
-path = ''
+path = '/sample_docs'
 
 def WORDtoPDF(in_file):
     if in_file.split('.')[-1] in ['doc', 'docx']:
